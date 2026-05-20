@@ -1,0 +1,19 @@
+{
+  "id": "/1p1/",
+  "name": "1+1",
+  "short_name": "1+1",
+  "description": "Mental math speed trainer",
+  "start_url": "/1p1/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+  {
+    "src": "icon.png",
+    "sizes": "1024x1024",
+    "type": "image/png",
+    "purpose": "any"
+  }
+]
+}

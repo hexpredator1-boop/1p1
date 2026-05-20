@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>1 plus 1</title>
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Space+Grotesk:wght@300;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --border: #222222;
+    --text: #f0f0f0;
+    --dim: #444444;
+    --accent: #e8ff47;
+    --accent-dim: #b8cc38;
+    --wrong: #7a2020;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Space Grotesk', sans-serif;
+    --nav-h: 64px;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  #app {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .screen {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+  }
+  .screen.active { display: flex; }
+
+  /* BOTTOM NAV */
+  #bottom-nav {
+    height: var(--nav-h);
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-shrink: 0;
+    background: var(--bg);
+  }
+
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: opacity 0.1s;
+  }
+  .nav-item:active { opacity: 0.6; }
+  .nav-symbol {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 300;
+    color: var(--dim);
+    line-height: 1;
+  }
+  .nav-item.active .nav-symbol { color: var(--accent); }
+  .nav-label {
+    font-family: var(--sans);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+  .nav-item.active .nav-label { color: var(--accent); }
+
+  /* HOME SCREEN */
+  #home-screen {
+    padding: 28px 24px 20px;
+    justify-content: space-between;
+  }
+
+  .home-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  .home-header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .home-op-title {
+    font-family: var(--mono);
+    font-size: clamp(28px, 7vw, 40px);
+    font-weight: 300;
+    color: var(--text);
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+  .home-best {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 0.03em;
+    min-height: 18px;
+  }
+  .home-best.no-best { color: var(--dim); }
+  .home-header-right {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 4px;
+  }
+  .icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--dim);
+    padding: 4px;
+    transition: color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+  }
+  .icon-btn:active { color: var(--text); }
+  .icon-btn svg { display: block; width: 22px; height: 22px; }
+
+  /* DIFFICULTY STEPPER */
+  .diff-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 16px;
+  }
+  .diff-section-label {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+  .diff-stepper {
+    display: flex;
+    gap: 8px;
+  }
+  .diff-step {
+    flex: 1;
+    height: 44px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 300;
+    color: var(--dim);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: background 0.1s, border-color 0.1s, color 0.1s;
+  }
+  .diff-step:active { opacity: 0.7; }
+  .diff-step.filled { background: #0f1400; border-color: #2a3a00; color: #4a6a00; }
+  .diff-step.active { background: #141a00; border-color: var(--accent); color: var(--accent); }
+
+  .diff-desc {
+    font-family: var(--mono);
+    font-size: clamp(12px, 3.2vw, 14px);
+    color: var(--dim);
+    line-height: 1.7;
+    min-height: 3em;
+  }
+  .diff-desc .diff-name { color: var(--text); font-weight: 400; }
+
+  #btn-go {
+    width: 100%;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 18px;
+    cursor: pointer;
+    transition: background 0.1s, transform 0.08s;
+    border-radius: 2px;
+  }
+  #btn-go:active { background: var(--accent-dim); transform: scale(0.98); }
+
+  /* QUESTION SCREEN */
+  #question-screen { justify-content: flex-start; }
+
+  #timer-bar {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  #timer-display {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+  }
+  #progress-display {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--dim);
+    letter-spacing: 0.03em;
+  }
+
+  #question-zone {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 12px 8px;
+    width: 100%;
+  }
+
+  @keyframes shake {
+    0%   { transform: translateX(0); }
+    15%  { transform: translateX(-6px); }
+    35%  { transform: translateX(6px); }
+    55%  { transform: translateX(-4px); }
+    75%  { transform: translateX(4px); }
+    90%  { transform: translateX(-2px); }
+    100% { transform: translateX(0); }
+  }
+
+  #question-text {
+    font-family: var(--mono);
+    font-size: clamp(44px, 13vw, 96px);
+    font-weight: 300;
+    color: var(--text);
+    letter-spacing: -1px;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    padding: 4px 10px;
+    transition: border-color 0.15s;
+    max-width: 100%;
+  }
+  #question-text.wrong {
+    border-color: var(--wrong);
+    animation: shake 0.3s ease-out;
+  }
+  #question-text .ans { color: var(--text); min-width: 0.6em; display: inline-block; }
+  #question-text .ans.wrong-ans { color: var(--wrong); }
+
+  #keypad-area {
+    width: 100%;
+    max-width: 420px;
+    align-self: center;
+    padding: 0 12px 12px;
+    flex-shrink: 0;
+  }
+  #keypad-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .key {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: clamp(20px, 5vw, 30px);
+    font-weight: 400;
+    border-radius: 4px;
+    cursor: pointer;
+    aspect-ratio: 1.6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: background 0.06s, transform 0.06s, border-color 0.06s;
+  }
+  .key:active, .key.pressed {
+    background: #1a1a1a;
+    color: #888888;
+    border-color: #1e1e1e;
+    transform: scale(0.93);
+  }
+  .key-zero { grid-column: span 2; aspect-ratio: auto; min-height: 52px; }
+  .key-clear {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--dim);
+    font-size: clamp(11px, 2.8vw, 16px);
+    font-family: var(--sans);
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .key-clear:active, .key-clear.pressed {
+    background: #1a1a1a;
+    color: var(--dim);
+    border-color: #1e1e1e;
+    transform: scale(0.93);
+  }
+
+  /* END SCREEN */
+  #end-screen { gap: 16px; align-items: center; justify-content: center; padding: 24px; }
+
+  .end-pct-label {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 300;
+    color: var(--dim);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+  .end-pct {
+    font-family: var(--mono);
+    font-size: clamp(56px, 16vw, 100px);
+    font-weight: 300;
+    color: var(--accent);
+    letter-spacing: -4px;
+    line-height: 1;
+  }
+  .end-best-block { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .end-best-pct { font-family: var(--mono); font-size: 14px; color: var(--dim); letter-spacing: 0.04em; }
+  .end-best-pct.new-record { color: var(--accent); }
+  .new-best-badge {
+    display: none;
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--bg);
+    background: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+  .new-best-badge.visible { display: inline-block; }
+  .end-time-dim { font-family: var(--mono); font-size: 13px; color: var(--dim); letter-spacing: 0.04em; }
+  #btn-restart {
+    background: transparent;
+    color: var(--dim);
+    border: 1px solid var(--border);
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 14px 40px;
+    cursor: pointer;
+    transition: color 0.1s, border-color 0.1s, transform 0.08s;
+    border-radius: 2px;
+    margin-top: 8px;
+  }
+  #btn-restart:active { transform: scale(0.97); color: var(--text); border-color: var(--text); }
+
+  /* OVERLAY BASE */
+  .overlay-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 10;
+  }
+  .overlay-backdrop.open { display: block; }
+
+  .bottom-sheet {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #161616;
+    border-top: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    z-index: 11;
+    transform: translateY(100%);
+    transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+    max-width: 480px;
+    margin: 0 auto;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .bottom-sheet.open { transform: translateY(0); }
+
+  .sheet-handle {
+    width: 36px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 16px auto 0;
+    flex-shrink: 0;
+  }
+  .sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px 12px;
+    flex-shrink: 0;
+  }
+  .sheet-title {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+
+  /* SETTINGS SHEET */
+  #settings-sheet { padding-bottom: 40px; }
+  .settings-body { padding: 4px 24px 0; flex: 1; overflow-y: auto; }
+  .drawer-field-label {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--text);
+    letter-spacing: 0.04em;
+    margin-bottom: 10px;
+  }
+  .drawer-input-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  #input-goal-time {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 300;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  #input-goal-time:focus { border-color: var(--accent); }
+  #input-goal-time.error { border-color: var(--wrong); }
+  .drawer-unit { font-family: var(--mono); font-size: 16px; color: var(--dim); flex-shrink: 0; }
+  .drawer-error { font-family: var(--sans); font-size: 11px; color: #c04040; letter-spacing: 0.04em; min-height: 16px; margin-bottom: 6px; }
+  .drawer-warning { font-family: var(--sans); font-size: 11px; color: var(--dim); letter-spacing: 0.04em; margin-bottom: 16px; min-height: 16px; }
+  #btn-save {
+    width: 100%;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 16px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background 0.1s, transform 0.08s;
+    margin-top: 8px;
+  }
+  #btn-save:active { background: var(--accent-dim); transform: scale(0.98); }
+
+  /* TROPHY SHEET */
+  #trophy-sheet { padding-bottom: 40px; }
+  .trophy-body { flex: 1; overflow-y: auto; padding: 0 0 8px; }
+  .trophy-op-group { border-bottom: 1px solid var(--border); }
+  .trophy-op-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .trophy-op-header:active { opacity: 0.7; }
+  .trophy-op-name {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+  .trophy-op-group.has-records .trophy-op-name { color: var(--text); }
+  .trophy-chevron { font-family: var(--mono); font-size: 12px; color: var(--dim); transition: transform 0.2s; }
+  .trophy-op-group.open .trophy-chevron { transform: rotate(180deg); }
+  .trophy-op-records { display: none; padding: 0 24px 14px; flex-direction: column; gap: 14px; }
+  .trophy-op-group.open .trophy-op-records { display: flex; }
+  .trophy-record { display: flex; flex-direction: column; gap: 3px; }
+  .trophy-record-main { display: flex; align-items: baseline; gap: 12px; }
+  .trophy-record-lv { font-family: var(--mono); font-size: 16px; font-weight: 400; color: var(--accent); }
+  .trophy-record-goal { font-family: var(--mono); font-size: 16px; font-weight: 300; color: var(--text); }
+  .trophy-record-dt { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: 0.03em; }
+  .trophy-empty { font-family: var(--mono); font-size: 12px; color: var(--dim); padding: 0 24px 14px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HOME -->
+  <div id="home-screen" class="screen active">
+    <div class="home-header">
+      <div class="home-header-left">
+        <div class="home-op-title" id="home-op-title">Addition</div>
+        <div class="home-best" id="home-best">no best yet</div>
+      </div>
+      <div class="home-header-right">
+        <button class="icon-btn" id="btn-trophy" aria-label="Perfect scores">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9H4a2 2 0 0 1-2-2V5h4"/>
+            <path d="M18 9h2a2 2 0 0 0 2-2V5h-4"/>
+            <path d="M12 17v4"/>
+            <path d="M8 21h8"/>
+            <path d="M6 9a6 6 0 0 0 12 0V3H6v6z"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="btn-settings" aria-label="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="diff-section">
+      <div class="diff-section-label">Difficulty</div>
+      <div class="diff-stepper" id="diff-stepper">
+        <div class="diff-step" data-level="1">1</div>
+        <div class="diff-step" data-level="2">2</div>
+        <div class="diff-step" data-level="3">3</div>
+        <div class="diff-step" data-level="4">4</div>
+        <div class="diff-step" data-level="5">5</div>
+      </div>
+      <div class="diff-desc" id="diff-desc"></div>
+    </div>
+
+    <button id="btn-go">Start</button>
+  </div>
+
+  <!-- QUESTION -->
+  <div id="question-screen" class="screen">
+    <div id="timer-bar">
+      <div id="timer-display">00:00:00</div>
+      <div id="progress-display">1 / 15</div>
+    </div>
+    <div id="question-zone">
+      <div id="question-text">—</div>
+    </div>
+    <div id="keypad-area">
+      <div id="keypad-grid">
+        <button class="key" data-val="1">1</button>
+        <button class="key" data-val="2">2</button>
+        <button class="key" data-val="3">3</button>
+        <button class="key" data-val="4">4</button>
+        <button class="key" data-val="5">5</button>
+        <button class="key" data-val="6">6</button>
+        <button class="key" data-val="7">7</button>
+        <button class="key" data-val="8">8</button>
+        <button class="key" data-val="9">9</button>
+        <button class="key key-zero" data-val="0">0</button>
+        <button class="key key-clear" data-val="clear">clr</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- END -->
+  <div id="end-screen" class="screen">
+    <div class="end-pct-label">Score</div>
+    <div class="end-pct" id="end-pct">—%</div>
+    <div class="end-best-block">
+      <div class="end-best-pct" id="end-best-pct"></div>
+      <div class="new-best-badge" id="new-best-badge">New best</div>
+    </div>
+    <div class="end-time-dim" id="end-time-dim"></div>
+    <button id="btn-restart">Back</button>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div id="bottom-nav">
+    <div class="nav-item active" data-op="add">
+      <div class="nav-symbol">+</div>
+      <div class="nav-label">Add</div>
+    </div>
+    <div class="nav-item" data-op="sub">
+      <div class="nav-symbol">−</div>
+      <div class="nav-label">Sub</div>
+    </div>
+    <div class="nav-item" data-op="mul">
+      <div class="nav-symbol">×</div>
+      <div class="nav-label">Mult</div>
+    </div>
+    <div class="nav-item" data-op="div">
+      <div class="nav-symbol">÷</div>
+      <div class="nav-label">Div</div>
+    </div>
+  </div>
+
+  <!-- SETTINGS SHEET -->
+  <div class="overlay-backdrop" id="settings-backdrop"></div>
+  <div class="bottom-sheet" id="settings-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title" id="settings-sheet-title">Addition — Settings</div>
+    </div>
+    <div class="settings-body">
+      <div class="drawer-field-label">Goal time per question</div>
+      <div class="drawer-input-row">
+        <input id="input-goal-time" type="number" min="0.1" step="0.1" placeholder="0.9">
+        <span class="drawer-unit">s</span>
+      </div>
+      <div class="drawer-error" id="drawer-error"></div>
+      <div class="drawer-warning" id="drawer-warning"></div>
+      <button id="btn-save">Save</button>
+    </div>
+  </div>
+
+  <!-- TROPHY SHEET -->
+  <div class="overlay-backdrop" id="trophy-backdrop"></div>
+  <div class="bottom-sheet" id="trophy-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">Perfect 100s</div>
+    </div>
+    <div class="trophy-body" id="trophy-body"></div>
+  </div>
+
+</div>
+<script>
+(() => {
+  const WRONG_PENALTY_MS = 1500;
+  const SESSION_SIZE     = 15;
+  const OPS              = ['add','sub','mul','div'];
+  const OP_NAMES         = { add:'Addition', sub:'Subtraction', mul:'Multiplication', div:'Division' };
+
+  const LS_STATE   = 'ms2_state';
+  const LS_BESTS   = 'ms2_bests';
+  const LS_PERFECT = 'ms2_perfect';
+
+  const DIFF_DESC = {
+    add: [
+      '<span class="diff-name">Warm up</span> — single digit, sums up to 10',
+      '<span class="diff-name">Easy</span> — single digit, sums up to 18',
+      '<span class="diff-name">Medium</span> — 2-digit + 1-digit, no carrying',
+      '<span class="diff-name">Hard</span> — 2-digit + 1-digit, with carrying',
+      '<span class="diff-name">Expert</span> — 2-digit + 2-digit, with carrying',
+    ],
+    sub: [
+      '<span class="diff-name">Warm up</span> — single digit, small gaps',
+      '<span class="diff-name">Easy</span> — single digit, all combos',
+      '<span class="diff-name">Medium</span> — 2-digit minus 1-digit, no borrowing',
+      '<span class="diff-name">Hard</span> — 2-digit minus 1-digit, with borrowing',
+      '<span class="diff-name">Expert</span> — 2-digit minus 2-digit, with borrowing',
+    ],
+    mul: [
+      '<span class="diff-name">Warm up</span> — small single digits (2–4)',
+      '<span class="diff-name">Easy</span> — single digit, up to 5×5',
+      '<span class="diff-name">Medium</span> — single digit, full range 2–9',
+      '<span class="diff-name">Hard</span> — 2-digit × 1-digit, no carrying',
+      '<span class="diff-name">Expert</span> — 2-digit × 1-digit, with carrying',
+    ],
+    div: [
+      '<span class="diff-name">Warm up</span> — small divisors, result up to 5',
+      '<span class="diff-name">Easy</span> — single digit ÷ single digit',
+      '<span class="diff-name">Medium</span> — up to 81 ÷ 9, full range',
+      '<span class="diff-name">Hard</span> — 2-digit ÷ 1-digit, clean',
+      '<span class="diff-name">Expert</span> — 2-digit ÷ 2-digit, clean',
+    ],
+  };
+
+  // ── Question generators ──
+  function genAdd(level) {
+    const p = [];
+    if (level === 1) {
+      for (let a=1;a<=9;a++) for (let b=1;b<=9;b++) if(a+b<=10) p.push({q:`${a}+${b}`,ans:a+b});
+    } else if (level === 2) {
+      // handled directly in pickQuestions for add lv2 — return empty, never called
+      return p;
+    } else if (level === 3) {
+      for (let a=10;a<=99;a++) for (let b=1;b<=9;b++) if((a%10)+b<=9) p.push({q:`${a}+${b}`,ans:a+b});
+    } else if (level === 4) {
+      for (let a=10;a<=99;a++) for (let b=1;b<=9;b++) if((a%10)+b>=10) p.push({q:`${a}+${b}`,ans:a+b});
+    } else {
+      for (let a=10;a<=99;a++) for (let b=10;b<=99;b++) if((a%10)+(b%10)>=10) p.push({q:`${a}+${b}`,ans:a+b});
+    }
+    return p;
+  }
+
+  function genSub(level) {
+    const p = [];
+    if (level === 1) {
+      for (let a=2;a<=9;a++) for (let b=1;b<a;b++) if(a-b<=5) p.push({q:`${a}−${b}`,ans:a-b});
+    } else if (level === 2) {
+      for (let a=2;a<=9;a++) for (let b=1;b<a;b++) p.push({q:`${a}−${b}`,ans:a-b});
+    } else if (level === 3) {
+      for (let a=10;a<=99;a++) for (let b=1;b<=9;b++) if(a>b&&(a%10)>=b) p.push({q:`${a}−${b}`,ans:a-b});
+    } else if (level === 4) {
+      for (let a=10;a<=99;a++) for (let b=1;b<=9;b++) if(a>b&&(a%10)<b) p.push({q:`${a}−${b}`,ans:a-b});
+    } else {
+      for (let a=10;a<=99;a++) for (let b=10;b<a;b++) if((a%10)<(b%10)) p.push({q:`${a}−${b}`,ans:a-b});
+    }
+    return p;
+  }
+
+  function genMul(level) {
+    const p = [];
+    if (level === 1) {
+      for (let a=2;a<=4;a++) for (let b=2;b<=4;b++) p.push({q:`${a}×${b}`,ans:a*b});
+    } else if (level === 2) {
+      for (let a=2;a<=5;a++) for (let b=2;b<=5;b++) p.push({q:`${a}×${b}`,ans:a*b});
+    } else if (level === 3) {
+      for (let a=2;a<=9;a++) for (let b=2;b<=9;b++) p.push({q:`${a}×${b}`,ans:a*b});
+    } else if (level === 4) {
+      for (let a=12;a<=99;a++) for (let b=2;b<=9;b++) if((a%10)*b<10) p.push({q:`${a}×${b}`,ans:a*b});
+    } else {
+      for (let a=12;a<=99;a++) for (let b=2;b<=9;b++) if((a%10)*b>=10) p.push({q:`${a}×${b}`,ans:a*b});
+    }
+    return p;
+  }
+
+  function genDiv(level) {
+    const p = [];
+    if (level === 1) {
+      for (let b=2;b<=5;b++) for (let ans=1;ans<=5;ans++) p.push({q:`${b*ans}÷${b}`,ans});
+    } else if (level === 2) {
+      for (let b=2;b<=9;b++) for (let ans=2;ans<=9;ans++) p.push({q:`${b*ans}÷${b}`,ans});
+    } else if (level === 3) {
+      for (let b=2;b<=9;b++) for (let ans=2;ans<=9;ans++) p.push({q:`${b*ans}÷${b}`,ans});
+    } else if (level === 4) {
+      for (let b=2;b<=9;b++) for (let ans=10;ans<=99;ans++) if(b*ans<=999) p.push({q:`${b*ans}÷${b}`,ans});
+    } else {
+      for (let b=10;b<=99;b++) for (let ans=2;ans<=9;ans++) { const d=b*ans; if(d<=999) p.push({q:`${d}÷${b}`,ans}); }
+    }
+    return p;
+  }
+
+  function buildPool(op, level) {
+    switch(op) {
+      case 'add': return genAdd(level);
+      case 'sub': return genSub(level);
+      case 'mul': return genMul(level);
+      case 'div': return genDiv(level);
+    }
+    return [];
+  }
+
+  // ── Storage ──
+  function loadState() {
+    try { const s=JSON.parse(localStorage.getItem(LS_STATE)); if(s) return s; } catch {}
+    // Default goal times per op+level
+    const goalTimes = {};
+    const defaults = { add:0.9, sub:1.2, mul:2.0, div:2.5 };
+    ['add','sub','mul','div'].forEach(op => {
+      for (let lv=1;lv<=5;lv++) goalTimes[`${op}_${lv}`] = defaults[op];
+    });
+    return { op:'add', difficulties:{add:1,sub:1,mul:1,div:1}, goalTimes };
+  }
+  function saveState() { localStorage.setItem(LS_STATE, JSON.stringify(appState)); }
+  function loadBests() { try { return JSON.parse(localStorage.getItem(LS_BESTS))||{}; } catch { return {}; } }
+  function saveBest(key,pct) { const b=loadBests(); b[key]=pct; localStorage.setItem(LS_BESTS,JSON.stringify(b)); }
+  function clearBestForKey(key) { const b=loadBests(); delete b[key]; localStorage.setItem(LS_BESTS,JSON.stringify(b)); }
+  function loadPerfect() { try { return JSON.parse(localStorage.getItem(LS_PERFECT))||{}; } catch { return {}; } }
+  function savePerfect(key,goalSec) { const p=loadPerfect(); if(!p[key]){ p[key]={ts:Date.now(),goalSec}; localStorage.setItem(LS_PERFECT,JSON.stringify(p)); } }
+
+  // ── Helpers ──
+  function shuffle(arr) {
+    const a=[...arr];
+    for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+    return a;
+  }
+
+  function pickQuestions(op, level) {
+    // Addition level 2: guarantee the 8 original hard pairs, fill rest from level 1 pool
+    if (op === 'add' && level === 2) {
+      const hard8 = [
+        {q:'8+7',ans:15},{q:'8+6',ans:14},{q:'7+6',ans:13},
+        {q:'8+5',ans:13},{q:'5+7',ans:12},{q:'4+8',ans:12},
+        {q:'3+8',ans:11},{q:'4+7',ans:11}
+      ];
+      const hardSet = new Set(hard8.map(h => h.q));
+      // fillers: level 1 pool excluding any that match hard8 (none do, but safe)
+      const fillerPool = genAdd(1).filter(q => !hardSet.has(q.q));
+      const shuffledFillers = shuffle(fillerPool);
+      const fillerCount = SESSION_SIZE - hard8.length; // 7
+      const fillers = [];
+      let fi = 0, attempts = 0;
+      while (fillers.length < fillerCount && attempts < fillerCount * 20) {
+        attempts++;
+        fillers.push(shuffledFillers[fi % shuffledFillers.length]);
+        fi++;
+      }
+      // Merge: interleave hard pairs among fillers then shuffle the whole thing
+      const merged = shuffle([...hard8, ...fillers]);
+      // Fix consecutive duplicates
+      for (let i = 1; i < merged.length; i++) {
+        if (merged[i].q === merged[i-1].q) {
+          // find next non-duplicate to swap with
+          for (let j = i+1; j < merged.length; j++) {
+            if (merged[j].q !== merged[i-1].q) { [merged[i],merged[j]]=[merged[j],merged[i]]; break; }
+          }
+        }
+      }
+      return merged;
+    }
+
+    const pool = buildPool(op, level);
+    if (!pool.length) return [];
+    const s = shuffle(pool);
+    const result = [];
+    let idx = 0, attempts = 0;
+    while (result.length < SESSION_SIZE && attempts < SESSION_SIZE * 20) {
+      attempts++;
+      const q = s[idx % s.length];
+      if (result.length === 0 || q.q !== result[result.length-1].q) {
+        result.push(q);
+      }
+      idx++;
+      if (idx > 0 && idx % s.length === 0) s.sort(() => Math.random() - 0.5);
+    }
+    return result;
+  }
+
+  function formatTime(ms) {
+    const t=Math.floor(ms), m=Math.floor(t/60000), s=Math.floor((t%60000)/1000), cs=Math.floor((t%1000)/10);
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}:${String(cs).padStart(2,'0')}`;
+  }
+
+  function calcScore(actualMs, penaltyMs, numQ, goalSec) {
+    const idealMs=numQ*goalSec*1000, effectiveMs=actualMs+penaltyMs;
+    return Math.min(Math.round((idealMs/effectiveMs)*100),100);
+  }
+
+  function formatDateTime(ts) {
+    const d=new Date(ts), h=d.getHours(), m=String(d.getMinutes()).padStart(2,'0');
+    const ampm=h>=12?'pm':'am', h12=h%12||12;
+    const months=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+    return `${h12}:${m}${ampm} · ${months[d.getMonth()]} ${d.getDate()}/${d.getFullYear()}`;
+  }
+
+  // ── State ──
+  let appState = loadState();
+  let questions=[], qIndex=0, inputVal='';
+  let timerStart=0, timerRAF=null;
+  let penaltyMs=0, wrongLocked=false;
+
+  // ── DOM ──
+  const homeScreen      = document.getElementById('home-screen');
+  const questionScreen  = document.getElementById('question-screen');
+  const endScreen       = document.getElementById('end-screen');
+  const bottomNav       = document.getElementById('bottom-nav');
+  const homeOpTitle     = document.getElementById('home-op-title');
+  const homeBest        = document.getElementById('home-best');
+  const diffDesc        = document.getElementById('diff-desc');
+  const diffSteps       = document.querySelectorAll('.diff-step');
+  const timerDisplay    = document.getElementById('timer-display');
+  const progressDisplay = document.getElementById('progress-display');
+  const questionText    = document.getElementById('question-text');
+  const endPct          = document.getElementById('end-pct');
+  const endBestPct      = document.getElementById('end-best-pct');
+  const endTimeDim      = document.getElementById('end-time-dim');
+  const newBestBadge    = document.getElementById('new-best-badge');
+
+  function showScreen(name) {
+    homeScreen.classList.toggle('active', name==='home');
+    questionScreen.classList.toggle('active', name==='question');
+    endScreen.classList.toggle('active', name==='end');
+    bottomNav.style.display = name==='question' ? 'none' : '';
+  }
+
+  function refreshHome() {
+    const op=appState.op, level=appState.difficulties[op];
+    const bests=loadBests(), best=bests[`${op}_${level}`];
+    homeOpTitle.textContent = OP_NAMES[op];
+    if (best!=null) { homeBest.textContent=`best: ${best}% · Lv${level}`; homeBest.className='home-best'; }
+    else { homeBest.textContent='no best yet'; homeBest.className='home-best no-best'; }
+    diffSteps.forEach(step => {
+      const lv=parseInt(step.dataset.level);
+      step.classList.toggle('active', lv===level);
+      step.classList.toggle('filled', lv<level);
+    });
+    diffDesc.innerHTML = DIFF_DESC[op][level-1];
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.op===op));
+    document.getElementById('settings-sheet-title').textContent = `${OP_NAMES[op]} — Settings`;
+  }
+
+  // ── Nav ──
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      appState.op = item.dataset.op;
+      saveState();
+      refreshHome();
+      showScreen('home');
+    });
+  });
+
+  // ── Stepper ──
+  diffSteps.forEach(step => {
+    step.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      appState.difficulties[appState.op] = parseInt(step.dataset.level);
+      saveState();
+      refreshHome();
+    });
+  });
+
+  // ── Settings ──
+  const settingsBackdrop = document.getElementById('settings-backdrop');
+  const settingsSheet    = document.getElementById('settings-sheet');
+  const inputGoalTime    = document.getElementById('input-goal-time');
+  const drawerError      = document.getElementById('drawer-error');
+  const drawerWarning    = document.getElementById('drawer-warning');
+
+  function openSettings() {
+    const key = `${appState.op}_${appState.difficulties[appState.op]}`;
+    const defaults = { add:0.9, sub:1.2, mul:2.0, div:2.5 };
+    inputGoalTime.value = appState.goalTimes[key] ?? defaults[appState.op];
+    drawerError.textContent=''; drawerWarning.textContent='';
+    inputGoalTime.classList.remove('error');
+    settingsBackdrop.classList.add('open');
+    requestAnimationFrame(() => settingsSheet.classList.add('open'));
+  }
+  function closeSettings() { settingsSheet.classList.remove('open'); settingsBackdrop.classList.remove('open'); }
+
+  document.getElementById('btn-settings').addEventListener('click', openSettings);
+  settingsBackdrop.addEventListener('click', closeSettings);
+
+  inputGoalTime.addEventListener('input', () => {
+    const op=appState.op, lv=appState.difficulties[op], key=`${op}_${lv}`;
+    const defaults={add:0.9,sub:1.2,mul:2.0,div:2.5};
+    const cur = appState.goalTimes[key] ?? defaults[op];
+    const val=parseFloat(inputGoalTime.value);
+    drawerError.textContent=''; inputGoalTime.classList.remove('error');
+    drawerWarning.textContent = (!isNaN(val)&&val>0&&val!==cur)
+      ? `Changing goal time will reset Level ${lv} highscore.` : '';
+  });
+
+  document.getElementById('btn-save').addEventListener('click', () => {
+    const raw=inputGoalTime.value.trim(), val=parseFloat(raw);
+    if (!raw||isNaN(val)||val<=0) { drawerError.textContent='Must be a number greater than 0.'; inputGoalTime.classList.add('error'); return; }
+    const newGoal=Math.round(val*100)/100;
+    const op=appState.op, lv=appState.difficulties[op], key=`${op}_${lv}`;
+    const defaults={add:0.9,sub:1.2,mul:2.0,div:2.5};
+    if (newGoal!==(appState.goalTimes[key]??defaults[op])) clearBestForKey(key);
+    appState.goalTimes[key]=newGoal;
+    saveState(); closeSettings(); refreshHome();
+  });
+
+  // ── Trophy ──
+  const trophyBackdrop = document.getElementById('trophy-backdrop');
+  const trophySheet    = document.getElementById('trophy-sheet');
+  const trophyBody     = document.getElementById('trophy-body');
+
+  function openTrophy() {
+    renderTrophy();
+    trophyBackdrop.classList.add('open');
+    requestAnimationFrame(() => trophySheet.classList.add('open'));
+  }
+  function closeTrophy() { trophySheet.classList.remove('open'); trophyBackdrop.classList.remove('open'); }
+
+  function renderTrophy() {
+    const perfect=loadPerfect();
+    trophyBody.innerHTML='';
+    OPS.forEach(op => {
+      const records=[];
+      for (let lv=1;lv<=5;lv++) { const k=`${op}_${lv}`; if(perfect[k]) records.push({lv,...perfect[k]}); }
+      const group=document.createElement('div');
+      group.className='trophy-op-group'+(records.length?' has-records':'');
+      const header=document.createElement('div');
+      header.className='trophy-op-header';
+      header.innerHTML=`<div class="trophy-op-name">${OP_NAMES[op]}</div><div class="trophy-chevron">▾</div>`;
+      group.appendChild(header);
+      const recEl=document.createElement('div');
+      recEl.className='trophy-op-records';
+      if (records.length) {
+        records.forEach(r => {
+          const rec=document.createElement('div');
+          rec.className='trophy-record';
+          rec.innerHTML=`<div class="trophy-record-main"><span class="trophy-record-lv">Lv${r.lv}</span><span class="trophy-record-goal">${r.goalSec}s</span></div><div class="trophy-record-dt">${formatDateTime(r.ts)}</div>`;
+          recEl.appendChild(rec);
+        });
+        group.classList.add('open');
+      } else {
+        const empty=document.createElement('div');
+        empty.className='trophy-empty'; empty.textContent='—';
+        recEl.appendChild(empty);
+      }
+      group.appendChild(recEl);
+      header.addEventListener('click', () => group.classList.toggle('open'));
+      trophyBody.appendChild(group);
+    });
+  }
+
+  document.getElementById('btn-trophy').addEventListener('click', openTrophy);
+  trophyBackdrop.addEventListener('click', closeTrophy);
+
+  // ── Session ──
+  function startSession() {
+    const op=appState.op, level=appState.difficulties[op];
+    questions=pickQuestions(op,level);
+    qIndex=0; inputVal=''; penaltyMs=0; wrongLocked=false;
+    showScreen('question');
+    renderQuestion();
+    timerStart=performance.now();
+    tickTimer();
+  }
+
+  function tickTimer() { timerDisplay.textContent=formatTime(performance.now()-timerStart); timerRAF=requestAnimationFrame(tickTimer); }
+  function stopTimer() { cancelAnimationFrame(timerRAF); timerRAF=null; }
+
+  function renderQuestion() {
+    progressDisplay.textContent=`${qIndex+1} / ${questions.length}`;
+    inputVal=''; questionText.classList.remove('wrong'); updateDisplay();
+  }
+
+  function updateDisplay() {
+    const q=questions[qIndex];
+    questionText.innerHTML=`${q.q}=<span class="ans">${inputVal}</span>`;
+  }
+
+  function isImpossible(typed, answer) { return !String(answer).startsWith(typed); }
+
+  function triggerWrong() {
+    if (wrongLocked) return;
+    wrongLocked=true; penaltyMs+=WRONG_PENALTY_MS;
+    if (navigator.vibrate) navigator.vibrate(80);
+    const q=questions[qIndex];
+    questionText.innerHTML=`${q.q}=<span class="ans wrong-ans">${inputVal}</span>`;
+    questionText.classList.add('wrong');
+    setTimeout(() => { inputVal=''; questionText.classList.remove('wrong'); updateDisplay(); wrongLocked=false; }, 320);
+  }
+
+  function finishSession() {
+    const actualMs=performance.now()-timerStart;
+    stopTimer();
+    const op=appState.op, level=appState.difficulties[op];
+    const defaults={add:0.9,sub:1.2,mul:2.0,div:2.5};
+    const goalKey=`${op}_${level}`, goalSec=appState.goalTimes[goalKey]??defaults[op];
+    const key=goalKey, pct=calcScore(actualMs,penaltyMs,questions.length,goalSec);
+    endPct.textContent=`${pct}%`;
+    endTimeDim.textContent=formatTime(actualMs);
+    const bests=loadBests(), prevBest=bests[key], isNew=prevBest==null||pct>prevBest;
+    if (isNew) {
+      saveBest(key,pct);
+      endBestPct.textContent=prevBest!=null?`prev best: ${prevBest}%`:'first record!';
+      endBestPct.className='end-best-pct new-record';
+      newBestBadge.classList.add('visible');
+    } else {
+      endBestPct.textContent=`best: ${prevBest}%`;
+      endBestPct.className='end-best-pct';
+      newBestBadge.classList.remove('visible');
+    }
+    if (pct===100) savePerfect(key,goalSec);
+    showScreen('end');
+  }
+
+  // ── Input ──
+  function handleInput(digit) {
+    if (wrongLocked) return;
+    if (digit==='clear') { inputVal=''; updateDisplay(); return; }
+    const q=questions[qIndex], candidate=inputVal+digit, numVal=parseInt(candidate,10);
+    if (numVal===q.ans) {
+      inputVal=candidate; updateDisplay();
+      qIndex++;
+      if (qIndex>=questions.length) finishSession();
+      else renderQuestion();
+      return;
+    }
+    if (isImpossible(candidate,q.ans)) { inputVal=candidate; triggerWrong(); return; }
+    inputVal=candidate; updateDisplay();
+  }
+
+  document.querySelectorAll('.key').forEach(key => {
+    const val=key.dataset.val;
+    key.addEventListener('pointerdown', e => { e.preventDefault(); key.classList.add('pressed'); handleInput(val); });
+    key.addEventListener('pointerup',     () => key.classList.remove('pressed'));
+    key.addEventListener('pointerleave',  () => key.classList.remove('pressed'));
+    key.addEventListener('pointercancel', () => key.classList.remove('pressed'));
+  });
+
+  document.addEventListener('keydown', e => {
+    if (!questionScreen.classList.contains('active')) return;
+    if (e.key>='0'&&e.key<='9') handleInput(e.key);
+    else if (['Backspace','Delete','Escape'].includes(e.key)) handleInput('clear');
+  });
+
+  document.getElementById('btn-go').addEventListener('click', startSession);
+  document.getElementById('btn-restart').addEventListener('click', () => { stopTimer(); refreshHome(); showScreen('home'); });
+
+  refreshHome();
+  showScreen('home');
+})();
+</script>
+<script>
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+</script>
+</body>
+</html>
