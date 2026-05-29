@@ -99,35 +99,8 @@
 
   .home-header {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-  }
-  .home-header-left {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-  .home-op-title {
-    font-family: var(--mono);
-    font-size: clamp(28px, 7vw, 40px);
-    font-weight: 300;
-    color: var(--text);
-    letter-spacing: -1px;
-    line-height: 1;
-  }
-  .home-best {
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--accent);
-    letter-spacing: 0.03em;
-    min-height: 18px;
-  }
-  .home-best.no-best { color: var(--dim); }
-  .home-header-right {
-    display: flex;
-    gap: 10px;
     align-items: center;
-    margin-top: 4px;
+    justify-content: space-between;
   }
   .icon-btn {
     background: none;
@@ -522,11 +495,6 @@
   <!-- HOME -->
   <div id="home-screen" class="screen active">
     <div class="home-header">
-      <div class="home-header-left">
-        <div class="home-op-title" id="home-op-title">Addition</div>
-        <div class="home-best" id="home-best">no best yet</div>
-      </div>
-      <div class="home-header-right">
         <button class="icon-btn" id="btn-trophy" aria-label="Perfect scores">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
             <path d="M6 9H4a2 2 0 0 1-2-2V5h4"/>
@@ -542,7 +510,6 @@
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
           </svg>
         </button>
-      </div>
     </div>
 
     <div class="diff-section">
@@ -780,9 +747,9 @@
   function saveState() { localStorage.setItem(LS_STATE, JSON.stringify(appState)); }
   function loadBests() { try { return JSON.parse(localStorage.getItem(LS_BESTS))||{}; } catch { return {}; } }
   function saveBest(key,pct) { const b=loadBests(); b[key]=pct; localStorage.setItem(LS_BESTS,JSON.stringify(b)); }
-  function clearBestForKey(key) { const b=loadBests(); delete b[key]; localStorage.setItem(LS_BESTS,JSON.stringify(b)); }
+
   function loadPerfect() { try { return JSON.parse(localStorage.getItem(LS_PERFECT))||{}; } catch { return {}; } }
-  function savePerfect(key,goalSec) { const p=loadPerfect(); if(!p[key]){ p[key]={ts:Date.now(),goalSec}; localStorage.setItem(LS_PERFECT,JSON.stringify(p)); } }
+  function savePerfect(key,goalSec) { const p=loadPerfect(); if(!p[key]||goalSec<p[key].goalSec){ p[key]={ts:Date.now(),goalSec}; localStorage.setItem(LS_PERFECT,JSON.stringify(p)); } }
 
   // ── Helpers ──
   function shuffle(arr) {
@@ -870,8 +837,6 @@
   const questionScreen  = document.getElementById('question-screen');
   const endScreen       = document.getElementById('end-screen');
   const bottomNav       = document.getElementById('bottom-nav');
-  const homeOpTitle     = document.getElementById('home-op-title');
-  const homeBest        = document.getElementById('home-best');
   const diffDesc        = document.getElementById('diff-desc');
   const diffSteps       = document.querySelectorAll('.diff-step');
   const timerDisplay    = document.getElementById('timer-display');
@@ -891,10 +856,6 @@
 
   function refreshHome() {
     const op=appState.op, level=appState.difficulties[op];
-    const bests=loadBests(), best=bests[`${op}_${level}`];
-    homeOpTitle.textContent = OP_NAMES[op];
-    if (best!=null) { homeBest.textContent=`best: ${best}% · Lv${level}`; homeBest.className='home-best'; }
-    else { homeBest.textContent='no best yet'; homeBest.className='home-best no-best'; }
     diffSteps.forEach(step => {
       const lv=parseInt(step.dataset.level);
       step.classList.toggle('active', lv===level);
@@ -953,8 +914,7 @@
     const cur = appState.goalTimes[key] ?? defaults[op];
     const val=parseFloat(inputGoalTime.value);
     drawerError.textContent=''; inputGoalTime.classList.remove('error');
-    drawerWarning.textContent = (!isNaN(val)&&val>0&&val!==cur)
-      ? `Changing goal time will reset Level ${lv} highscore.` : '';
+    drawerWarning.textContent = '';
   });
 
   document.getElementById('btn-save').addEventListener('click', () => {
@@ -963,7 +923,6 @@
     const newGoal=Math.round(val*100)/100;
     const op=appState.op, lv=appState.difficulties[op], key=`${op}_${lv}`;
     const defaults={add:0.9,sub:1.2,mul:2.0,div:2.5};
-    if (newGoal!==(appState.goalTimes[key]??defaults[op])) clearBestForKey(key);
     appState.goalTimes[key]=newGoal;
     saveState(); closeSettings(); refreshHome();
   });

@@ -1,4 +1,4 @@
-const CACHE = 'mathsprint-v6';
+const CACHE = '1p1-v7';
 const FILES = [
   './',
   './index.html',
